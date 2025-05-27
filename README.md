@@ -1,0 +1,1 @@
+# Qr-lecture-platform
