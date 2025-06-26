@@ -17,6 +17,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Soluyan/Qr-lecture-platform/backend/models"
 	"github.com/google/uuid"
 	"github.com/skip2/go-qrcode"
 )
@@ -28,15 +29,15 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Создаем сессию с таймером жизни 80 минут
 	expiresAt := time.Now().Add(80 * time.Minute)
-	newSession := Session{
+	newSession := models.Session{
 		ID:        sessionID,
 		ExpiresAt: expiresAt,
 	}
 
 	// Сохраняем сессию в памяти
-	sessionsLock.Lock()
-	sessions[sessionID] = newSession
-	sessionsLock.Unlock()
+	models.sessionsLock.Lock()
+	models.sessions[sessionID] = newSession
+	models.sessionsLock.Unlock()
 
 	// Генерируем URL для студентов (используем localhost для разработки)
 	studentURL := fmt.Sprintf("http://localhost:8080/ask?session=%s", sessionID)
@@ -64,16 +65,16 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 func CleanupSessions() {
 	for {
 		time.Sleep(5 * time.Minute)
-		sessionsLock.Lock()
-		sessionQuestionsMutex.Lock()
-		for id, session := range sessions {
+		models.sessionsLock.Lock()
+		models.sessionQuestionsMutex.Lock()
+		for id, session := range models.sessions {
 			if time.Now().After(session.ExpiresAt) {
-				delete(sessions, id)
-				delete(sessionQuestions, id)
+				delete(models.sessions, id)
+				delete(models.sessionQuestions, id)
 			}
 		}
-		sessionQuestionsMutex.Unlock()
-		sessionsLock.Unlock()
+		models.sessionQuestionsMutex.Unlock()
+		models.sessionsLock.Unlock()
 	}
 }
 
