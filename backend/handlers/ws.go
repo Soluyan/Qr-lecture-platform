@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/Soluyan/Qr-lecture-platform/backend/models"
 	"github.com/gorilla/websocket"
 )
 
@@ -68,9 +69,9 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// Отправка текущих вопросов при подключении
-	sessionQuestionsMutex.RLock()
-	questions := sessionQuestions[sessionID]
-	sessionQuestionsMutex.RUnlock()
+	models.QuestionsMutex.RLock()
+	questions := models.SessionQuestions[sessionID]
+	models.QuestionsMutex.RUnlock()
 	if err := conn.WriteJSON(questions); err != nil {
 		log.Println("Initial send failed:", err)
 		return
@@ -99,14 +100,14 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 
 // deleteQuestion обрабатывает удаление вопросов
 func deleteQuestion(sessionID, questionID string) {
-	sessionQuestionsMutex.Lock()
-	defer sessionQuestionsMutex.Unlock()
+	models.QuestionsMutex.Lock()
+	defer models.QuestionsMutex.Unlock()
 
-	questions := sessionQuestions[sessionID]
+	questions := models.SessionQuestions[sessionID]
 	for i, q := range questions {
 		if q.ID == questionID {
 			questions = append(questions[:i], questions[i+1:]...)
-			sessionQuestions[sessionID] = questions
+			models.SessionQuestions[sessionID] = questions
 			broadcastQuestions(sessionID, questions)
 			break
 		}

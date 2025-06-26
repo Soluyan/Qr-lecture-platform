@@ -25,9 +25,9 @@ func AskQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Проверяем существование сессии
-	models.sessionsLock.Lock()
-	_, exists := sessions[sessionID]
-	models.sessionsLock.Unlock()
+	models.SessionsLock.Lock()
+	_, exists := models.Sessions[sessionID]
+	models.SessionsLock.Unlock()
 	if !exists {
 		http.Error(w, "Session not found or expired", http.StatusNotFound)
 		return
@@ -61,10 +61,10 @@ func AskQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Добавляем вопрос в хранилище
-	models.sessionQuestionsMutex.Lock()
-	models.sessionQuestions[sessionID] = append(models.sessionQuestions[sessionID], question)
-	questions := models.sessionQuestions[sessionID]
-	models.sessionQuestionsMutex.Unlock()
+	models.QuestionsMutex.Lock()
+	models.SessionQuestions[sessionID] = append(models.SessionQuestions[sessionID], question)
+	questions := models.SessionQuestions[sessionID]
+	models.QuestionsMutex.Unlock()
 
 	// Рассылаем обновленный список вопросов
 	broadcastQuestions(sessionID, questions)

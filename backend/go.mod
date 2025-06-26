@@ -1,4 +1,4 @@
-module github.com/Soluyan/Qr-lecture-platform.git
+module github.com/Soluyan/Qr-lecture-platform/backend
 
 go 1.24.2
 

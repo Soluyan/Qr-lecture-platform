@@ -35,9 +35,9 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Сохраняем сессию в памяти
-	models.sessionsLock.Lock()
-	models.sessions[sessionID] = newSession
-	models.sessionsLock.Unlock()
+	models.SessionsLock.Lock()
+	models.Sessions[sessionID] = newSession
+	models.SessionsLock.Unlock()
 
 	// Генерируем URL для студентов (используем localhost для разработки)
 	studentURL := fmt.Sprintf("http://localhost:8080/ask?session=%s", sessionID)
@@ -65,16 +65,16 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 func CleanupSessions() {
 	for {
 		time.Sleep(5 * time.Minute)
-		models.sessionsLock.Lock()
-		models.sessionQuestionsMutex.Lock()
-		for id, session := range models.sessions {
+		models.SessionsLock.Lock()
+		models.QuestionsMutex.Lock()
+		for id, session := range models.Sessions {
 			if time.Now().After(session.ExpiresAt) {
-				delete(models.sessions, id)
-				delete(models.sessionQuestions, id)
+				delete(models.Sessions, id)
+				delete(models.SessionQuestions, id)
 			}
 		}
-		models.sessionQuestionsMutex.Unlock()
-		models.sessionsLock.Unlock()
+		models.QuestionsMutex.Unlock()
+		models.SessionsLock.Unlock()
 	}
 }
 
