@@ -1,84 +1,121 @@
+// GenerateSessionHandler creates a new lecture session and returns QR code
+// @Summary Create new session
+// @Description Generates new lecture session with 80min lifetime and returns QR code
+// @Produce png
+// @Success 200 {file} binary "QR code image"
+// @Router /create-session [get]
+
 package main
 
 import (
-    "encoding/json"
-    "fmt"
-    "github.com/google/uuid"
-    "github.com/skip2/go-qrcode"
-    "net/http"
-    "sync"
-    "time"
-)
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-var (
-    sessions     = make(map[string]Session)
-    sessionsLock sync.Mutex
+	"github.com/google/uuid"
+	"github.com/skip2/go-qrcode"
 )
-
-// Session структура для хранения информации о лекции
-type Session struct {
-    ID        string    `json:"id"`
-    ExpiresAt time.Time `json:"expires_at"`
-}
 
 // GenerateSessionHandler создает новую сессию и возвращает QR-код
 func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
-    // Генерируем уникальный ID сессии
-    sessionID := uuid.New().String()
-    
-    // Создаем сессию с таймером жизни 80 минут
-    expiresAt := time.Now().Add(80 * time.Minute)
-    newSession := Session{
-        ID:        sessionID,
-        ExpiresAt: expiresAt,
-    }
+	// Генерируем уникальный ID сессии
+	sessionID := uuid.New().String()
 
-    // Сохраняем сессию в памяти
-    sessionsLock.Lock()
-    sessions[sessionID] = newSession
-    sessionsLock.Unlock()
+	// Создаем сессию с таймером жизни 80 минут
+	expiresAt := time.Now().Add(80 * time.Minute)
+	newSession := Session{
+		ID:        sessionID,
+		ExpiresAt: expiresAt,
+	}
 
-    // Генерируем URL для студентов
-    studentURL := fmt.Sprintf("http://yourdomain.com/ask-question?session=%s", sessionID)
-    
-    // Создаем QR-код
-    qr, err := qrcode.New(studentURL, qrcode.Medium)
-    if err != nil {
-        http.Error(w, "Error generating QR code", http.StatusInternalServerError)
-        return
-    }
+	// Сохраняем сессию в памяти
+	sessionsLock.Lock()
+	sessions[sessionID] = newSession
+	sessionsLock.Unlock()
 
-    // Конвертируем в PNG изображение
-    png, err := qr.PNG(256)
-    if err != nil {
-        http.Error(w, "Error generating QR image", http.StatusInternalServerError)
-        return
-    }
+	// Генерируем URL для студентов (используем localhost для разработки)
+	studentURL := fmt.Sprintf("http://localhost:8080/ask?session=%s", sessionID)
 
-    // Отправляем изображение как ответ
-    w.Header().Set("Content-Type", "image/png")
-    w.Write(png)
+	// Создаем QR-код
+	qr, err := qrcode.New(studentURL, qrcode.Medium)
+	if err != nil {
+		http.Error(w, "Error generating QR code", http.StatusInternalServerError)
+		return
+	}
+
+	// Конвертируем в PNG изображение
+	png, err := qr.PNG(256)
+	if err != nil {
+		http.Error(w, "Error generating QR image", http.StatusInternalServerError)
+		return
+	}
+
+	// Отправляем изображение как ответ
+	w.Header().Set("Content-Type", "image/png")
+	w.Write(png)
 }
 
 // CleanupSessions регулярно очищает просроченные сессии
 func CleanupSessions() {
-    for {
-        time.Sleep(5 * time.Minute) // Проверка каждые 5 минут
-        
-        sessionsLock.Lock()
-        for id, session := range sessions {
-            if time.Now().After(session.ExpiresAt) {
-                delete(sessions, id)
-            }
-        }
-        sessionsLock.Unlock()
-    }
+	for {
+		time.Sleep(5 * time.Minute)
+		sessionsLock.Lock()
+		sessionQuestionsMutex.Lock()
+		for id, session := range sessions {
+			if time.Now().After(session.ExpiresAt) {
+				delete(sessions, id)
+				delete(sessionQuestions, id)
+			}
+		}
+		sessionQuestionsMutex.Unlock()
+		sessionsLock.Unlock()
+	}
+}
+
+func enableCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+
+		next(w, r)
+	}
 }
 
 func main() {
-    go CleanupSessions()
-    
-    http.HandleFunc("/create-session", GenerateSessionHandler)
-    fmt.Println("Server started on :8080")
-    http.ListenAndServe(":8080", nil)
+	server := &http.Server{
+		Addr: ":8080",
+	}
+
+	go CleanupSessions()
+
+	http.HandleFunc("/ws", WsHandler)
+	http.HandleFunc("/create-session", GenerateSessionHandler)
+	http.HandleFunc("/ask", enableCORS(AskQuestionHandler))
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
 }
