@@ -1,5 +1,5 @@
 // backend/models/session.go
-package main
+package models
 
 import (
 	"sync"

@@ -1,5 +1,5 @@
 // backend/models/question.go
-package main
+package models
 
 import (
 	"sync"
