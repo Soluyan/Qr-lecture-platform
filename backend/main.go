@@ -17,6 +17,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Soluyan/Qr-lecture-platform/backend/handlers"
 	"github.com/Soluyan/Qr-lecture-platform/backend/models"
 	"github.com/google/uuid"
 	"github.com/skip2/go-qrcode"
@@ -99,9 +100,9 @@ func main() {
 
 	go CleanupSessions()
 
-	http.HandleFunc("/ws", WsHandler)
+	http.HandleFunc("/ws", handlers.WsHandler)
 	http.HandleFunc("/create-session", GenerateSessionHandler)
-	http.HandleFunc("/ask", enableCORS(AskQuestionHandler))
+	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
