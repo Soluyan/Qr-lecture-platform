@@ -1,5 +1,5 @@
 // backend/handlers/ws.go
-package main
+package handlers
 
 import (
 	"encoding/json"

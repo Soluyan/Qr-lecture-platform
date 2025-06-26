@@ -1,10 +1,14 @@
 // backend/handlers/broadcast.go
-package main
+package handlers
 
-import "log"
+import (
+	"log"
+
+	"github.com/Soluyan/Qr-lecture-platform/backend/models"
+)
 
 // broadcastQuestions рассылает вопросы всем клиентам в сессии
-func broadcastQuestions(sessionID string, questions []Question) {
+func broadcastQuestions(sessionID string, questions []models.Question) {
 	hub.RLock()
 	clients, ok := hub.clients[sessionID]
 	hub.RUnlock()
