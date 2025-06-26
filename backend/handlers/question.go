@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Soluyan/Qr-lecture-platform/backend/models"
 	"github.com/google/uuid"
 )
 
@@ -24,9 +25,9 @@ func AskQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Проверяем существование сессии
-	sessionsLock.Lock()
+	models.sessionsLock.Lock()
 	_, exists := sessions[sessionID]
-	sessionsLock.Unlock()
+	models.sessionsLock.Unlock()
 	if !exists {
 		http.Error(w, "Session not found or expired", http.StatusNotFound)
 		return
@@ -51,7 +52,7 @@ func AskQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Создаем новый вопрос
-	question := Question{
+	question := models.Question{
 		ID:        uuid.New().String(),
 		SessionID: sessionID,
 		Author:    req.Author,
@@ -60,10 +61,10 @@ func AskQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Добавляем вопрос в хранилище
-	sessionQuestionsMutex.Lock()
-	sessionQuestions[sessionID] = append(sessionQuestions[sessionID], question)
-	questions := sessionQuestions[sessionID]
-	sessionQuestionsMutex.Unlock()
+	models.sessionQuestionsMutex.Lock()
+	models.sessionQuestions[sessionID] = append(models.sessionQuestions[sessionID], question)
+	questions := models.sessionQuestions[sessionID]
+	models.sessionQuestionsMutex.Unlock()
 
 	// Рассылаем обновленный список вопросов
 	broadcastQuestions(sessionID, questions)
