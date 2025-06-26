@@ -104,6 +104,9 @@ func main() {
 	http.HandleFunc("/create-session", GenerateSessionHandler)
 	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
 
+	log.Println("Server starting on :8080...")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
