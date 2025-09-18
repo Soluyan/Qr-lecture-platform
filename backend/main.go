@@ -100,6 +100,7 @@ func main() {
 
 	go CleanupSessions()
 
+	http.Handle("/", http.FileServer(http.Dir("../frontend/public")))
 	http.HandleFunc("/ws", handlers.WsHandler)
 	http.HandleFunc("/create-session", GenerateSessionHandler)
 	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
