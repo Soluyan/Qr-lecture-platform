@@ -1,3 +1,2 @@
 import App from './App.svelte';
-
-new App({ target: document.body });
+App({ target: document.body });
