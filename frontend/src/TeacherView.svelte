@@ -4,13 +4,30 @@
   let qrCodeUrl = '';
   let questions = [];
   let ws;
+  let loading = false;
+  let sessionLoading = false;
 
   async function createSession() {
+    sessionLoading = true;
+    qrCodeUrl = '';
+    questions = [];
+    sessionId = '';
+    ws && ws.close();
+
+    // Запрашиваем QR-код с backend
     const response = await fetch('http://localhost:8080/create-session');
     const qrBlob = await response.blob();
     qrCodeUrl = URL.createObjectURL(qrBlob);
-    sessionId = new URL(response.url).searchParams.get('session');
-    connectWebSocket();
+
+    // Получаем sessionId из ссылки, зашитой в QR-коде (front: /ask?session=...)
+    // Т.к. backend не возвращает sessionId явно, предлагаем временно запросить его у преподавателя вручную
+    // Или если у нас есть какая-то логика его получения — здесь можно ее реализовать
+
+    // Например, можно показать поле ввода sessionId преподавателю или сделать отдельный API
+
+    // (если в будущем backend будет возвращать sessionId, то здесь можно будет распарсить его из json)
+
+    sessionLoading = false;
   }
 
   function connectWebSocket() {
@@ -28,9 +45,15 @@
 
 <div class="teacher-container">
   <div class="qr-section">
-    {#if qrCodeUrl}
+    {#if sessionLoading}
+      <p>Создание сессии...</p>
+    {:else if qrCodeUrl}
+      <div class="session-info">
+        <strong>Session ID:</strong> <span class="sid">{sessionId ? sessionId : "Не определён"}</span>
+      </div>
       <img src={qrCodeUrl} alt="Lecture QR Code" class="qr-code" />
-      <p>Session ID: {sessionId}</p>
+      <p>Session ID: <input bind:value={sessionId} placeholder="Введите Session ID для подключения" /></p>
+      <button on:click={connectWebSocket} disabled={!sessionId || ws}>Подключиться к вопросам</button>
     {:else}
       <button on:click={createSession}>Start New Lecture</button>
     {/if}
@@ -38,18 +61,24 @@
 
   <div class="questions-section">
     <h2>Student Questions</h2>
-    <div class="questions-list">
-      {#each questions as question (question.id)}
-        <div class="question-card">
-          <div class="question-content">
-            <strong>{question.author || 'Anonymous'}:</strong>
-            <p>{question.text}</p>
-            <small>{new Date(question.createdAt).toLocaleTimeString()}</small>
+    {#if loading}
+      <p>Загрузка вопросов...</p>
+    {:else if questions.length === 0}
+      <p>Вопросов пока нет.</p>
+    {:else}
+      <div class="questions-list">
+        {#each questions as question (question.id)}
+          <div class="question-card">
+            <div class="question-content">
+              <strong>{question.author || 'Anonymous'}:</strong>
+              <p>{question.text}</p>
+              <small>{new Date(question.createdAt).toLocaleTimeString()}</small>
+            </div>
+            <button on:click={() => deleteQuestion(question.id)}>×</button>
           </div>
-          <button on:click={() => deleteQuestion(question.id)}>×</button>
-        </div>
-      {/each}
-    </div>
+        {/each}
+      </div>
+    {/if}
   </div>
 </div>
 

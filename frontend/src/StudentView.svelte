@@ -5,29 +5,47 @@
   let isAnonymous = false;
   let sessionId = '';
   let submitted = false;
+  let loading = false;
+  let error = '';
 
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
     sessionId = params.get('session');
+    if (!sessionId) {
+      error = "Session ID not found. Перейдите по QR-коду с лекции.";
+    }
   });
 
   async function submitQuestion() {
+    if (!sessionId) return;
+    error = '';
+    loading = true;
     const author = isAnonymous ? 'Anonymous' : name;
-    
-    const response = await fetch(`http://localhost:8080/ask?session=${sessionId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author, text: question })
-    });
+    try {
+      const response = await fetch(`http://localhost:8080/ask?session=${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author, text: question })
+      });
 
-    if (response.ok) {
-      submitted = true;
+      if (response.ok) {
+        submitted = true;
+      } else {
+        const { message } = await response.json().catch(() => ({}));
+        error = message || 'Ошибка отправки. Возможно, сессия устарела или не найдена.';
+      }
+    } catch (e) {
+      error = 'Ошибка сети. Попробуйте еще раз.';
     }
+    loading = false;
   }
 </script>
 
 <div class="student-container">
-  {#if !submitted}
+  {#if error}
+    <div class="error-message">{error}</div>
+  {/if}
+  {#if !submitted && !error}
     <h2>Ask a Question</h2>
     <form on:submit|preventDefault={submitQuestion}>
       <div class="form-group">
@@ -50,9 +68,12 @@
         <small>{500 - question.length} characters remaining</small>
       </div>
 
-      <button type="submit">Submit Question</button>
+      <button type="submit" disabled={loading}>
+        {#if loading}Отправка...{/if}
+        {#if !loading}Submit Question{/if}
+      </button>
     </form>
-  {:else}
+  {:else if submitted}
     <div class="success-message">
       <h2>Thank you!</h2>
       <p>Your question has been submitted.</p>
@@ -98,5 +119,15 @@
   .success-message {
     text-align: center;
     color: #4CAF50;
+  }
+
+    .error-message {
+    color: #c0392b;
+    background: #ffecec;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
   }
 </style>

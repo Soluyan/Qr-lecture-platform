@@ -41,7 +41,7 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	models.SessionsLock.Unlock()
 
 	// Генерируем URL для студентов (используем localhost для разработки)
-	studentURL := fmt.Sprintf("http://localhost:8080/ask?session=%s", sessionID)
+	studentURL := fmt.Sprintf("http://localhost:5173/ask?session=%s", sessionID)
 
 	// Создаем QR-код
 	qr, err := qrcode.New(studentURL, qrcode.Medium)
@@ -106,7 +106,6 @@ func main() {
 	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
 
 	log.Println("Server starting on :8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
