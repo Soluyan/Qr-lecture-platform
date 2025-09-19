@@ -13,9 +13,9 @@
   {/if}
 </main>
 
-<style>
+<!-- <style>
   main {
     font-family: Arial, sans-serif;
     line-height: 1.6;
   }
-</style>
+</style> -->

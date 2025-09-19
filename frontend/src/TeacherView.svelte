@@ -19,14 +19,6 @@
     const qrBlob = await response.blob();
     qrCodeUrl = URL.createObjectURL(qrBlob);
 
-    // Получаем sessionId из ссылки, зашитой в QR-коде (front: /ask?session=...)
-    // Т.к. backend не возвращает sessionId явно, предлагаем временно запросить его у преподавателя вручную
-    // Или если у нас есть какая-то логика его получения — здесь можно ее реализовать
-
-    // Например, можно показать поле ввода sessionId преподавателю или сделать отдельный API
-
-    // (если в будущем backend будет возвращать sessionId, то здесь можно будет распарсить его из json)
-
     sessionLoading = false;
   }
 
