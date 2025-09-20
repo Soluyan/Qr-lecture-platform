@@ -2,7 +2,6 @@
   import TeacherView from './TeacherView.svelte';
   import StudentView from './StudentView.svelte';
 
-  // Упрощенная проверка пути
   let isTeacherView = true;
   
   // Проверяем, есть ли параметры в URL
