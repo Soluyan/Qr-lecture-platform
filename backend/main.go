@@ -45,6 +45,9 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	newSession := models.Session{
 		ID:        sessionID,
 		ExpiresAt: expiresAt,
+		Settings: models.SessionSettings{
+			AllowAnonymous: true, // По умолчанию разрешены анонимные вопросы
+		},
 	}
 
 	// Сохраняем сессию в памяти
@@ -80,6 +83,79 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func UpdateSessionSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	sessionID := r.URL.Query().Get("session")
+	if sessionID == "" {
+		http.Error(w, "Session ID is required", http.StatusBadRequest)
+		return
+	}
+
+	var settings struct {
+		AllowAnonymous bool `json:"allowAnonymous"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&settings); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Обновляем настройки сессии
+	models.SessionsLock.Lock()
+	if session, exists := models.Sessions[sessionID]; exists {
+		session.Settings.AllowAnonymous = settings.AllowAnonymous
+		models.Sessions[sessionID] = session
+	}
+	models.SessionsLock.Unlock()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{
+		"success": true,
+	})
+}
+
+func GetSessionSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	sessionID := r.URL.Query().Get("session")
+	if sessionID == "" {
+		http.Error(w, "Session ID is required", http.StatusBadRequest)
+		return
+	}
+
+	models.SessionsLock.RLock()
+	session, exists := models.Sessions[sessionID]
+	models.SessionsLock.RUnlock()
+
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(session.Settings)
 }
 
 // CleanupSessions регулярно очищает просроченные сессии
@@ -126,6 +202,8 @@ func main() {
 	http.HandleFunc("/ws", handlers.WsHandler)
 	http.HandleFunc("/create-session", enableCORS(GenerateSessionHandler))
 	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
+	http.HandleFunc("/session/settings", enableCORS(UpdateSessionSettingsHandler))
+	http.HandleFunc("/session/settings/get", enableCORS(GetSessionSettingsHandler))
 
 	log.Println("Server starting on :8080...")
 

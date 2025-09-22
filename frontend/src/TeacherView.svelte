@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+
   let sessionId = "";
   let qrCodeUrl = "";
   let questions = [];
@@ -7,6 +8,8 @@
   let loading = false;
   let sessionLoading = false;
   let connectionStatus = "disconnected";
+  let allowAnonymous = true;
+  let settingsLoading = false;
 
   onMount(() => {
     console.log("TeacherView mounted");
@@ -23,7 +26,7 @@
     questions = [];
     sessionId = "";
     connectionStatus = "disconnected";
-    
+
     if (ws) {
       ws.close();
       ws = null;
@@ -46,15 +49,64 @@
       qrCodeUrl = `data:image/png;base64,${data.qrCode}`;
 
       console.log("Session created successfully:", sessionId);
-      
+
+      // Загружаем настройки сессии
+      await loadSessionSettings();
+
       // Подключаем WebSocket
       connectWebSocket();
-      
     } catch (error) {
       console.error("Error creating session:", error);
       alert(`Ошибка при создании сессии: ${error.message}`);
     } finally {
       sessionLoading = false;
+    }
+  }
+
+  async function loadSessionSettings() {
+    if (!sessionId) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/session/settings/get?session=${sessionId}`
+      );
+      if (response.ok) {
+        const settings = await response.json();
+        allowAnonymous = settings.allowAnonymous;
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error);
+    }
+  }
+
+  async function updateSessionSettings() {
+    if (!sessionId) return;
+
+    settingsLoading = true;
+    try {
+      const response = await fetch(
+        `http://localhost:8080/session/settings?session=${sessionId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            allowAnonymous: allowAnonymous,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        console.log("Settings updated successfully");
+      } else {
+        throw new Error("Failed to update settings");
+      }
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      alert("Ошибка при обновлении настроек");
+    } finally {
+      settingsLoading = false;
     }
   }
 
@@ -72,7 +124,7 @@
     }
 
     connectionStatus = "connecting"; // Устанавливаем статус подключения
-    
+
     try {
       ws = new WebSocket(`ws://localhost:8080/ws?session=${sessionId}`);
 
@@ -114,6 +166,11 @@
       ws.send(JSON.stringify({ action: "delete", question_id: id }));
     }
   }
+
+  // Обновляем настройки при изменении чекбокса
+  $: if (sessionId && allowAnonymous !== undefined) {
+    updateSessionSettings();
+  }
 </script>
 
 <div class="teacher-container">
@@ -125,6 +182,23 @@
         <strong>Session ID:</strong> <span class="sid">{sessionId}</span>
       </div>
       <img src={qrCodeUrl} alt="Lecture QR Code" class="qr-code" />
+      
+      <!-- Добавляем настройки сессии -->
+      <div class="session-settings">
+        <h3>Настройки сессии</h3>
+        <label class="setting-option">
+          <input 
+            type="checkbox" 
+            bind:checked={allowAnonymous}
+            disabled={settingsLoading}
+          />
+          <span>Разрешить анонимные вопросы</span>
+        </label>
+        {#if settingsLoading}
+          <span class="settings-saving">Сохранение...</span>
+        {/if}
+      </div>
+
       <div class="connection-status">
         {#if connectionStatus === "connected"}
           <p class="connected">✅ Подключено к вопросам</p>
@@ -179,6 +253,32 @@
     flex-direction: column;
     align-items: center;
     border-right: 1px solid #eee;
+    gap: 1rem;
+  }
+
+  .session-settings {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 8px;
+    width: 100%;
+  }
+
+  .session-settings h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+  }
+
+  .setting-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .settings-saving {
+    font-size: 0.8rem;
+    color: #666;
+    margin-left: 1.5rem;
   }
 
   .qr-code {
@@ -208,4 +308,9 @@
   .question-content {
     flex-grow: 1;
   }
+
+  .connected { color: green; }
+  .connecting { color: orange; }
+  .error { color: darkred; }
+  .disconnected { color: red; }
 </style>

@@ -9,6 +9,8 @@
   let loading = false;
   let error = '';
   let apiBaseUrl = 'http://localhost:8080';
+  let sessionSettings = null;
+  let settingsLoading = false;
 
   onMount(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -19,10 +21,38 @@
       console.error('No session ID found in URL');
     } else {
       console.log('Session ID detected:', sessionId);
+      loadSessionSettings();
     }
   });
 
+  async function loadSessionSettings() {
+    if (!sessionId) return;
+    
+    settingsLoading = true;
+    try {
+      const response = await fetch(`${apiBaseUrl}/session/settings/get?session=${sessionId}`);
+      if (response.ok) {
+        sessionSettings = await response.json();
+        console.log('Session settings loaded:', sessionSettings);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    } finally {
+      settingsLoading = false;
+    }
+  }
+
   async function submitQuestion() {
+    if (!sessionId) {
+      error = "Требуется идентификатор сеанса";
+      return;
+    }
+    
+    // Проверяем настройки сессии
+    if (sessionSettings && !sessionSettings.allowAnonymous && isAnonymous) {
+      error = "Анонимные вопросы отключены для этой сессии";
+      return;
+    }
     if (!sessionId) {
       error = "Требуется идентификатор сеанса";
       return;
@@ -108,7 +138,7 @@
 <div class="student-container">
   {#if error}
     <div class="error-message" role="alert">
-      <strong>Error:</strong> {error}
+      <strong>Ошибка:</strong> {error}
       {#if error.includes('session')}
         <p>Пожалуйста, обратитесь к лектору за действительным QR-кодом.</p>
       {/if}
@@ -122,18 +152,28 @@
         <strong>ID сессии:</strong> {sessionId ? sessionId.substring(0, 18) + '...' : 'Not detected'}
       </p>
 
-      <form on:submit|preventDefault={submitQuestion} class="question-form">
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input 
-              type="checkbox" 
-              bind:checked={isAnonymous}
-              aria-label="Ask anonymously"
-            />
-            <span class="checkmark"></span>
-            Анонимно
-          </label>
+      {#if settingsLoading}
+        <p>Загрузка настроек сессии...</p>
+      {:else if sessionSettings && !sessionSettings.allowAnonymous}
+        <div class="info-message">
+          ⓘ Анонимные вопросы отключены для этой лекции
         </div>
+      {/if}
+
+      <form on:submit|preventDefault={submitQuestion} class="question-form">
+        {#if sessionSettings && sessionSettings.allowAnonymous}
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                bind:checked={isAnonymous}
+                aria-label="Ask anonymously"
+              />
+              <span class="checkmark"></span>
+              Анонимно
+            </label>
+          </div>
+        {/if}
 
         {#if !isAnonymous}
           <div class="form-group">
@@ -145,6 +185,7 @@
               placeholder="Введите ваше имя"
               maxlength="100"
               disabled={loading}
+              required
             />
           </div>
         {/if}
@@ -193,6 +234,15 @@
 </div>
 
 <style>
+    .info-message {
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    color: #1976d2;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
   .student-container {
     max-width: 600px;
     margin: 2rem auto;

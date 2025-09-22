@@ -8,14 +8,19 @@ import (
 
 var (
 	Sessions         = make(map[string]Session)
-	SessionsLock     sync.Mutex
+	SessionsLock     = &sync.RWMutex{}
 	SessionQuestions = make(map[string][]Question)
 	QuestionsMutex   = &sync.RWMutex{}
 )
 
+type SessionSettings struct {
+	AllowAnonymous bool `json:"allowAnonymous"`
+}
+
 type Session struct {
-	ID        string    `json:"id"`
-	ExpiresAt time.Time `json:"expires_at"`
+	ID        string          `json:"id"`
+	ExpiresAt time.Time       `json:"expiresAt"`
+	Settings  SessionSettings `json:"settings"`
 }
 
 type Question struct {
