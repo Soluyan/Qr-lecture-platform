@@ -33,6 +33,8 @@ var hub = struct {
 
 // WsHandler обрабатывает WebSocket соединения
 func WsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("WebSocket connection attempt from:", r.RemoteAddr)
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("WebSocket upgrade failed:", err)
@@ -40,7 +42,10 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionID := r.URL.Query().Get("session")
+	log.Println("WebSocket session ID:", sessionID)
+
 	if sessionID == "" {
+		log.Println("WebSocket: no session ID provided")
 		conn.Close()
 		return
 	}

@@ -6,12 +6,11 @@
   let ws = null;
   let loading = false;
   let sessionLoading = false;
+  let connectionStatus = "disconnected";
 
-  // Правильное использование onMount на верхнем уровне
   onMount(() => {
     console.log("TeacherView mounted");
     return () => {
-      // Очистка при размонтировании компонента
       if (ws) {
         ws.close();
       }
@@ -23,8 +22,8 @@
     qrCodeUrl = "";
     questions = [];
     sessionId = "";
+    connectionStatus = "disconnected";
     
-    // Закрываем существующее соединение
     if (ws) {
       ws.close();
       ws = null;
@@ -48,8 +47,8 @@
 
       console.log("Session created successfully:", sessionId);
       
-      // Автоматически подключаем WebSocket после создания сессии
-      setTimeout(connectWebSocket, 100);
+      // Подключаем WebSocket
+      connectWebSocket();
       
     } catch (error) {
       console.error("Error creating session:", error);
@@ -63,22 +62,23 @@
     console.log("connectWebSocket called with sessionId:", sessionId);
 
     if (!sessionId) {
-      console.error("No sessionId provided");
       alert("Session ID не найден");
       return;
     }
 
-    // Закрываем существующее соединение
     if (ws) {
       ws.close();
       ws = null;
     }
 
+    connectionStatus = "connecting"; // Устанавливаем статус подключения
+    
     try {
       ws = new WebSocket(`ws://localhost:8080/ws?session=${sessionId}`);
 
       ws.onopen = () => {
         console.log("WebSocket connected for session:", sessionId);
+        connectionStatus = "connected";
       };
 
       ws.onmessage = (event) => {
@@ -94,14 +94,17 @@
 
       ws.onerror = (error) => {
         console.error("WebSocket error:", error);
+        connectionStatus = "error";
       };
 
       ws.onclose = (event) => {
         console.log("WebSocket disconnected:", event.code, event.reason);
+        connectionStatus = "disconnected";
         ws = null;
       };
     } catch (error) {
       console.error("WebSocket creation error:", error);
+      connectionStatus = "error";
       alert("Ошибка создания WebSocket соединения");
     }
   }
@@ -111,8 +114,6 @@
       ws.send(JSON.stringify({ action: "delete", question_id: id }));
     }
   }
-
-  // Убираем реактивное поведение - используем явный вызов после createSession
 </script>
 
 <div class="teacher-container">
@@ -125,10 +126,13 @@
       </div>
       <img src={qrCodeUrl} alt="Lecture QR Code" class="qr-code" />
       <div class="connection-status">
-        {#if ws && ws.readyState === WebSocket.OPEN}
+        {#if connectionStatus === "connected"}
           <p class="connected">✅ Подключено к вопросам</p>
-        {:else if ws && ws.readyState === WebSocket.CONNECTING}
+        {:else if connectionStatus === "connecting"}
           <p class="connecting">⏳ Подключение...</p>
+        {:else if connectionStatus === "error"}
+          <p class="error">❌ Ошибка подключения</p>
+          <button on:click={connectWebSocket}>Повторить подключение</button>
         {:else}
           <p class="disconnected">❌ Не подключено</p>
           <button on:click={connectWebSocket}>Подключиться к вопросам</button>

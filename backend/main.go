@@ -124,7 +124,7 @@ func main() {
 
 	http.Handle("/", http.FileServer(http.Dir("../frontend/public")))
 	http.HandleFunc("/ws", handlers.WsHandler)
-	http.HandleFunc("/create-session", enableCORS(GenerateSessionHandler)) // Добавляем CORS
+	http.HandleFunc("/create-session", enableCORS(GenerateSessionHandler))
 	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
 
 	log.Println("Server starting on :8080...")
