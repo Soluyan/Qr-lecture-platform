@@ -7,34 +7,50 @@
   let loading = false;
   let sessionLoading = false;
 
+  // Правильное использование onMount на верхнем уровне
+  onMount(() => {
+    console.log("TeacherView mounted");
+    return () => {
+      // Очистка при размонтировании компонента
+      if (ws) {
+        ws.close();
+      }
+    };
+  });
+
   async function createSession() {
     sessionLoading = true;
     qrCodeUrl = "";
     questions = [];
     sessionId = "";
-    ws && ws.close();
+    
+    // Закрываем существующее соединение
+    if (ws) {
+      ws.close();
+      ws = null;
+    }
 
     try {
-      // Запрашиваем сессию с backend
       const response = await fetch("http://localhost:8080/create-session");
 
-      // Проверяем статус ответа
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
 
-      // Проверяем наличие необходимых полей
       if (!data.sessionId || !data.qrCode) {
         throw new Error("Invalid response format from server");
       }
 
-      // Получаем sessionId и QR-код в base64 из ответа
       sessionId = data.sessionId;
       qrCodeUrl = `data:image/png;base64,${data.qrCode}`;
 
       console.log("Session created successfully:", sessionId);
+      
+      // Автоматически подключаем WebSocket после создания сессии
+      setTimeout(connectWebSocket, 100);
+      
     } catch (error) {
       console.error("Error creating session:", error);
       alert(`Ошибка при создании сессии: ${error.message}`);
@@ -68,8 +84,8 @@
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          // Убеждаемся, что data - это массив
           questions = Array.isArray(data) ? data : [];
+          console.log("Received questions:", questions.length);
         } catch (error) {
           console.error("Error parsing questions:", error);
           questions = [];
@@ -78,23 +94,16 @@
 
       ws.onerror = (error) => {
         console.error("WebSocket error:", error);
-        alert("Ошибка подключения к WebSocket");
       };
 
-      ws.onclose = () => {
-        console.log("WebSocket disconnected");
+      ws.onclose = (event) => {
+        console.log("WebSocket disconnected:", event.code, event.reason);
         ws = null;
       };
     } catch (error) {
       console.error("WebSocket creation error:", error);
       alert("Ошибка создания WebSocket соединения");
     }
-    onMount(() => {
-      console.log(
-        "TeacherView mounted, current ws state:",
-        ws ? ws.readyState : "null"
-      );
-    });
   }
 
   function deleteQuestion(id) {
@@ -103,12 +112,7 @@
     }
   }
 
-  // Автоматически подключаемся к WebSocket после создания сессии
-  $: if (sessionId && sessionId !== '' && (!ws || ws.readyState !== WebSocket.OPEN)) {
-    console.log('Attempting to connect WebSocket for session:', sessionId);
-    // Небольшая задержка перед подключением
-    setTimeout(connectWebSocket, 500);
-  }
+  // Убираем реактивное поведение - используем явный вызов после createSession
 </script>
 
 <div class="teacher-container">
@@ -138,7 +142,6 @@
   <div class="questions-section">
     <h2>Student Questions</h2>
     {#if !questions || questions.length === 0}
-      <!-- Добавляем проверку на null -->
       <p>Вопросов пока нет.</p>
     {:else}
       <div class="questions-list">
@@ -149,10 +152,9 @@
               <p>{question.text}</p>
               <small>{new Date(question.createdAt).toLocaleTimeString()}</small>
             </div>
-            <button
-              on:click={() => deleteQuestion(question.id)}
-              class="delete-btn">×</button
-            >
+            <button on:click={() => deleteQuestion(question.id)} class="delete-btn">
+              ×
+            </button>
           </div>
         {/each}
       </div>
