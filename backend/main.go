@@ -9,6 +9,8 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,8 +25,18 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-// GenerateSessionHandler создает новую сессию и возвращает QR-код
+// GenerateSessionHandler создает новую сессию и возвращает JSON с sessionId и QR-кодом
 func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
+	// Добавляем CORS заголовки
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	// Генерируем уникальный ID сессии
 	sessionID := uuid.New().String()
 
@@ -57,9 +69,17 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Отправляем изображение как ответ
-	w.Header().Set("Content-Type", "image/png")
-	w.Write(png)
+	// Кодируем QR-код в base64
+	qrBase64 := base64.StdEncoding.EncodeToString(png)
+
+	// Отправляем JSON ответ с sessionId и QR-кодом
+	response := map[string]string{
+		"sessionId": sessionID,
+		"qrCode":    qrBase64,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // CleanupSessions регулярно очищает просроченные сессии
@@ -82,10 +102,12 @@ func CleanupSessions() {
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
 
 		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
@@ -102,7 +124,7 @@ func main() {
 
 	http.Handle("/", http.FileServer(http.Dir("../frontend/public")))
 	http.HandleFunc("/ws", handlers.WsHandler)
-	http.HandleFunc("/create-session", GenerateSessionHandler)
+	http.HandleFunc("/create-session", enableCORS(GenerateSessionHandler)) // Добавляем CORS
 	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
 
 	log.Println("Server starting on :8080...")
