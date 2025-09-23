@@ -182,13 +182,13 @@
         <strong>Session ID:</strong> <span class="sid">{sessionId}</span>
       </div>
       <img src={qrCodeUrl} alt="Lecture QR Code" class="qr-code" />
-      
+
       <!-- Добавляем настройки сессии -->
       <div class="session-settings">
         <h3>Настройки сессии</h3>
         <label class="setting-option">
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             bind:checked={allowAnonymous}
             disabled={settingsLoading}
           />
@@ -230,7 +230,10 @@
               <p>{question.text}</p>
               <small>{new Date(question.createdAt).toLocaleTimeString()}</small>
             </div>
-            <button on:click={() => deleteQuestion(question.id)} class="delete-btn">
+            <button
+              on:click={() => deleteQuestion(question.id)}
+              class="delete-btn"
+            >
               ×
             </button>
           </div>
@@ -243,19 +246,50 @@
 <style>
   .teacher-container {
     display: flex;
+    flex-direction: column;
     height: 100vh;
+    background: white;
+    font-family: "Inter", sans-serif;
+  }
+
+  @media (min-width: 768px) {
+    .teacher-container {
+      flex-direction: row;
+    }
   }
 
   .qr-section {
-    width: 30%;
-    padding: 2rem;
+    width: 100%;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-right: 1px solid #eee;
     gap: 1rem;
   }
 
+  @media (min-width: 768px) {
+    .qr-section {
+      width: 320px;
+      border-right: 2px solid #e2e8f0;
+      border-bottom: none;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+  }
+
+  .questions-section {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  /* 
+  Old
+  */
   .session-settings {
     background: #f5f5f5;
     padding: 1rem;
@@ -309,8 +343,16 @@
     flex-grow: 1;
   }
 
-  .connected { color: green; }
-  .connecting { color: orange; }
-  .error { color: darkred; }
-  .disconnected { color: red; }
+  .connected {
+    color: green;
+  }
+  .connecting {
+    color: orange;
+  }
+  .error {
+    color: darkred;
+  }
+  .disconnected {
+    color: red;
+  }
 </style>

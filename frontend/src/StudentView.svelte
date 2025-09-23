@@ -234,7 +234,39 @@
 </div>
 
 <style>
-    .info-message {
+.student-container {
+  min-height: 100vh;
+  padding: 0;
+  background: white;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-section {
+  padding: 2rem 1rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .form-section {
+    padding: 3rem 2rem;
+    margin: 2rem auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  .student-container {
+    background: #f8fafc;
+    padding: 1rem;
+  }
+}
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+      .info-message {
     background: #e3f2fd;
     border: 1px solid #2196f3;
     color: #1976d2;
@@ -242,17 +274,6 @@
     border-radius: 4px;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-  }
-  .student-container {
-    max-width: 600px;
-    margin: 2rem auto;
-    padding: 2rem;
-    border: 1px solid #eee;
-    border-radius: 8px;
-  }
-  
-  .form-group {
-    margin-bottom: 1rem;
   }
   
   label {
