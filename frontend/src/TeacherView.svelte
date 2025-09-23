@@ -244,12 +244,14 @@
 </div>
 
 <style>
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
   .teacher-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
     background: white;
     font-family: "Inter", sans-serif;
+    color: #1a202c;
   }
 
   @media (min-width: 768px) {
@@ -285,6 +287,58 @@
     padding: 1.5rem;
     overflow-y: auto;
     min-height: 0;
+  }
+
+  .session-info .sid {
+    color: #0078cf;
+    font-weight: 600;
+  }
+
+  button:not(.delete-btn) {
+    background: #0078cf;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  button:not(.delete-btn):hover {
+    background: #0066b3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 120, 207, 0.3);
+  }
+
+  .delete-btn {
+    background: #e53e3e;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .delete-btn:hover {
+    background: #c53030;
+    transform: scale(1.1);
+  }
+
+  .connection-status .connected {
+    color: #38a169;
+  }
+  .connection-status .connecting {
+    color: #d69e2e;
+  }
+  .connection-status .error {
+    color: #e53e3e;
+  }
+  .disconnected {
+    color: red;
   }
 
   /* 
@@ -341,18 +395,5 @@
 
   .question-content {
     flex-grow: 1;
-  }
-
-  .connected {
-    color: green;
-  }
-  .connecting {
-    color: orange;
-  }
-  .error {
-    color: darkred;
-  }
-  .disconnected {
-    color: red;
   }
 </style>
