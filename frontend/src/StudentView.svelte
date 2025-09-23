@@ -245,6 +245,8 @@
     font-family: "Inter", sans-serif;
     color: #2d3748;
     font-weight: 400;
+    font-size: 16px;
+    line-height: 1.6;
   }
 
   .form-section h2 {
@@ -292,11 +294,28 @@
       border: 1px solid #e2e8f0;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      font-size: 1.05rem;
     }
 
     .student-container {
       background: #f8fafc;
       padding: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .form-section {
+      padding: 1.5rem 1rem;
+      margin: 1rem;
+    }
+
+    .form-group {
+      padding: 1rem;
+    }
+
+    button {
+      padding: 1rem 1.5rem;
+      font-size: 1.1rem; /* Увеличенный размер для мобильных */
     }
   }
 
@@ -307,6 +326,18 @@
     padding: 1.25rem;
     margin-bottom: 1rem;
     transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .form-group::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #48bb78;
+    transition: width 0.3s ease;
   }
 
   .form-group:focus-within {
@@ -315,11 +346,16 @@
     box-shadow: 0 4px 12px rgba(72, 187, 120, 0.15);
   }
 
+  .form-group:focus-within::after {
+    width: 100%;
+  }
+
   .form-group label {
     color: #4a5568;
     font-weight: 600;
     margin-bottom: 0.75rem;
     display: block;
+    cursor: pointer;
   }
 
   .info-message {
@@ -355,6 +391,16 @@
     transform: none;
   }
 
+  input:invalid,
+  textarea:invalid {
+    border-color: #e53e3e;
+  }
+
+  input:valid,
+  textarea:valid {
+    border-color: #48bb78;
+  }
+
   button {
     background: #48bb78;
     color: white;
@@ -368,6 +414,22 @@
 
   button:hover:not(:disabled) {
     background: #38a169;
+  }
+
+  button:focus {
+    outline: 3px solid #48bb78;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.2);
+  }
+
+  button:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  button:disabled:hover {
+    background: #a0aec0;
   }
 
   .success-message {
@@ -410,6 +472,11 @@
     }
   }
 
+  .loading {
+    position: relative;
+    color: transparent;
+  }
+
   .loading::after {
     content: "";
     width: 20px;
@@ -420,6 +487,20 @@
     animation: spin 1s linear infinite;
     display: inline-block;
     margin-left: 10px;
+  }
+
+  .loading::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
   }
 
   @keyframes spin {

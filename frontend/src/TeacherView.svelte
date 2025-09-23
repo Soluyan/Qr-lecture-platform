@@ -245,13 +245,15 @@
 
 <style>
   @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+  
   .teacher-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
     background: white;
     font-family: "Inter", sans-serif;
-    color: #1a202c;
+    font-size: 16px;
+    line-height: 1.5;
   }
 
   @media (min-width: 768px) {
@@ -269,6 +271,19 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+  }
+
+  .qr-code {
+    width: 256px;
+    height: 256px;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    transition: filter 0.3s ease;
+    animation: fadeInScale 0.6s ease-out;
+  }
+
+  .qr-code:hover {
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
   }
 
   @media (min-width: 768px) {
@@ -295,6 +310,40 @@
     text-align: center;
     margin-bottom: 2.5rem;
     position: relative;
+  }
+
+  .questions-section::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .questions-section::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .questions-section::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+  }
+
+  .questions-section::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+
+  @media (min-width: 1200px) {
+    .qr-section {
+      width: 380px;
+      padding: 2rem;
+    }
+
+    .questions-section {
+      padding: 2rem 3rem;
+    }
+  }
+
+  .question-text {
+    hyphens: auto;
+    word-wrap: break-word;
   }
 
   .questions-section h2::after {
@@ -325,6 +374,12 @@
     transition: all 0.2s ease;
   }
 
+  button:not(.delete-btn):focus {
+    outline: 3px solid #0078cf;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 120, 207, 0.2);
+  }
+
   button:not(.delete-btn):hover {
     background: #0066b3;
     transform: translateY(-1px);
@@ -346,6 +401,11 @@
   .delete-btn:hover {
     background: #c53030;
     transform: scale(1.1);
+  }
+
+  .delete-btn:focus {
+    outline: 3px solid #e53e3e;
+    outline-offset: 2px;
   }
 
   /* 
@@ -374,14 +434,6 @@
     font-size: 0.8rem;
     color: #666;
     margin-left: 1.5rem;
-  }
-
-  .qr-code {
-    width: 256px;
-    height: 256px;
-    margin-bottom: 1rem;
-    transition: all 0.5s ease;
-    animation: fadeInScale 0.6s ease-out;
   }
 
   @keyframes fadeInScale {
@@ -478,7 +530,7 @@
   }
 
   .question-author {
-    color: #294d9c;
+    color: #1a365d;
     font-weight: 600;
     font-size: 0.9rem;
   }
@@ -489,10 +541,41 @@
   }
 
   .question-text {
-    color: #4a5568;
+    color: #2d3748;
     font-size: 0.95rem;
-    line-height: 1.4;
+    line-height: 1.6;
     word-break: break-word;
+  }
+
+  .session-loading {
+    position: relative;
+    color: #718096;
+  }
+
+  .session-loading::after {
+    content: "⠋";
+    animation: dots 1.5s steps(5, end) infinite;
+    margin-left: 0.5rem;
+    display: inline-block;
+  }
+
+  @keyframes dots {
+    0%,
+    20% {
+      content: "⠋";
+    }
+    40% {
+      content: "⠙";
+    }
+    60% {
+      content: "⠹";
+    }
+    80% {
+      content: "⠸";
+    }
+    100% {
+      content: "⠼";
+    }
   }
 
   .connection-status {
