@@ -327,6 +327,8 @@
     margin-bottom: 1rem;
     transition: all 0.3s ease;
     position: relative;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .form-group::after {
@@ -358,6 +360,19 @@
     cursor: pointer;
   }
 
+  .form-group textarea {
+    border: none;
+    padding: 0;
+    font-size: 1rem;
+    background: transparent;
+    width: 100%;
+    resize: vertical;
+    min-height: 100px;
+    max-height: 300px;
+    line-height: 1.5;
+    font-family: inherit;
+  }
+
   .info-message {
     background: #e3f2fd;
     border: 1px solid #2196f3;
@@ -372,6 +387,12 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: bold;
+  }
+
+  textarea {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
   }
 
   input,

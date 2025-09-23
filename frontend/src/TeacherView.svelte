@@ -223,16 +223,23 @@
       <p>Вопросов пока нет.</p>
     {:else}
       <div class="questions-list">
-        {#each questions as question (question.id)}
+        {#each questions.slice().reverse() as question (question.id)}
           <div class="question-card">
             <div class="question-content">
-              <strong>{question.author || "Anonymous"}:</strong>
-              <p>{question.text}</p>
-              <small>{new Date(question.createdAt).toLocaleTimeString()}</small>
+              <div class="question-header">
+                <span class="question-author"
+                  >{question.author || "Anonymous"}</span
+                >
+                <span class="question-time"
+                  >{new Date(question.createdAt).toLocaleTimeString()}</span
+                >
+              </div>
+              <p class="question-text">{question.text}</p>
             </div>
             <button
               on:click={() => deleteQuestion(question.id)}
               class="delete-btn"
+              aria-label="Удалить вопрос"
             >
               ×
             </button>
@@ -245,7 +252,7 @@
 
 <style>
   @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-  
+
   .teacher-container {
     display: flex;
     flex-direction: column;
@@ -297,6 +304,24 @@
     }
   }
 
+  @media (max-width: 767px) {
+    .question-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+
+    .question-card {
+      padding: 0.75rem;
+      gap: 0.75rem;
+    }
+
+    .question-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+  }
+
   .questions-section {
     flex: 1;
     padding: 1.5rem;
@@ -342,8 +367,15 @@
   }
 
   .question-text {
+    color: #2d3748;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    word-break: break-word;
+    overflow-wrap: break-word;
     hyphens: auto;
-    word-wrap: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
+    margin: 0;
   }
 
   .questions-section h2::after {
@@ -408,9 +440,6 @@
     outline-offset: 2px;
   }
 
-  /* 
-  Old
-  */
   .session-settings {
     background: #f5f5f5;
     padding: 1rem;
@@ -451,6 +480,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    width: 100%;
   }
 
   .question-card {
@@ -465,6 +495,8 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: slideIn 0.4s ease-out;
     transform-origin: top;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   @keyframes slideIn {
@@ -520,31 +552,42 @@
   .question-content {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   .question-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.25rem;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 
   .question-author {
     color: #1a365d;
     font-weight: 600;
     font-size: 0.9rem;
+    flex-shrink: 0;
   }
 
   .question-time {
     color: #a0aec0;
     font-size: 0.8rem;
+    flex-shrink: 0;
   }
 
   .question-text {
     color: #2d3748;
     font-size: 0.95rem;
-    line-height: 1.6;
+    line-height: 1.5;
     word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    white-space: pre-wrap;
+    max-width: 100%;
+    margin: 0;
   }
 
   .session-loading {
