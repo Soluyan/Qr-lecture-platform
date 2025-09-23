@@ -218,7 +218,7 @@
   </div>
 
   <div class="questions-section">
-    <h2>Student Questions</h2>
+    <h2>Вопросы</h2>
     {#if !questions || questions.length === 0}
       <p>Вопросов пока нет.</p>
     {:else}
