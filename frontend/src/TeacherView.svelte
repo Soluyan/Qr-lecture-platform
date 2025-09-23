@@ -289,7 +289,7 @@
     min-height: 0;
   }
 
-    .questions-section h2 {
+  .questions-section h2 {
     color: #0078cf;
     font-weight: 700;
     text-align: center;
@@ -348,19 +348,6 @@
     transform: scale(1.1);
   }
 
-  .connection-status .connected {
-    color: #38a169;
-  }
-  .connection-status .connecting {
-    color: #d69e2e;
-  }
-  .connection-status .error {
-    color: #e53e3e;
-  }
-  .disconnected {
-    color: red;
-  }
-
   /* 
   Old
   */
@@ -393,6 +380,19 @@
     width: 256px;
     height: 256px;
     margin-bottom: 1rem;
+    transition: all 0.5s ease;
+    animation: fadeInScale 0.6s ease-out;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   .questions-list {
@@ -402,7 +402,6 @@
   }
 
   .question-card {
-    margin-bottom: 1rem;
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
@@ -411,12 +410,59 @@
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    transition: all 0.15s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideIn 0.4s ease-out;
+    transform-origin: top;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
 
   .question-card:hover {
     border-color: #0078cf;
     background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 120, 207, 0.15);
+  }
+
+  .question-card.removing {
+    animation: slideOut 0.3s ease-in forwards;
+  }
+
+  @keyframes slideOut {
+    to {
+      opacity: 0;
+      transform: translateX(100px) scale(0.8);
+      height: 0;
+      padding: 0;
+      margin: 0;
+      border: none;
+    }
+  }
+
+  .question-card.new-question {
+    border-left: 4px solid #48bb78;
+    animation: pulse 2s ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(72, 187, 120, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
+    }
   }
 
   .question-content {
@@ -425,27 +471,60 @@
   }
 
   .question-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
 
-.question-author {
-  color: #294d9c;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
+  .question-author {
+    color: #294d9c;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
 
-.question-time {
-  color: #a0aec0;
-  font-size: 0.8rem;
-}
+  .question-time {
+    color: #a0aec0;
+    font-size: 0.8rem;
+  }
 
-.question-text {
-  color: #4a5568;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  word-break: break-word;
-}
+  .question-text {
+    color: #4a5568;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  .connection-status {
+    transition: all 0.3s ease;
+  }
+
+  .connection-status.connecting {
+    animation: pulseStatus 1.5s infinite;
+  }
+
+  @keyframes pulseStatus {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .connection-status .connected {
+    color: #38a169;
+  }
+  .connection-status .connecting {
+    color: #d69e2e;
+  }
+  .connection-status .error {
+    color: #e53e3e;
+  }
+  .disconnected {
+    color: red;
+  }
 </style>

@@ -271,6 +271,18 @@
     padding: 2rem 1rem;
     max-width: 500px;
     margin: 0 auto;
+    animation: formEnter 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @keyframes formEnter {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
 
   @media (min-width: 768px) {
@@ -297,18 +309,9 @@
     transition: all 0.3s ease;
   }
 
-  .info-message {
-    background: #e3f2fd;
-    border: 1px solid #2196f3;
-    color: #1976d2;
-    padding: 0.75rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-  }
-
   .form-group:focus-within {
     border-color: #48bb78;
+    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(72, 187, 120, 0.15);
   }
 
@@ -317,6 +320,16 @@
     font-weight: 600;
     margin-bottom: 0.75rem;
     display: block;
+  }
+
+  .info-message {
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    color: #1976d2;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
   }
 
   label {
@@ -360,6 +373,62 @@
   .success-message {
     text-align: center;
     color: #48bb78;
+    animation: successEnter 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @keyframes successEnter {
+    0% {
+      opacity: 0;
+      transform: scale(0.8) rotateX(-90deg);
+    }
+    50% {
+      transform: scale(1.05) rotateX(0);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotateX(0);
+    }
+  }
+
+  .success-icon {
+    animation: iconBounce 0.6s ease;
+  }
+
+  @keyframes iconBounce {
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.3);
+    }
+    60% {
+      transform: scale(1.1);
+    }
+  }
+
+  .loading::after {
+    content: "";
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 10px;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   .char-counter {
