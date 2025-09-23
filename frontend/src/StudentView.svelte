@@ -249,7 +249,22 @@
 
   .form-section h2 {
     color: #0078cf;
-    font-weight: 600;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+
+  .form-section h2::after {
+    content: "";
+    position: absolute;
+    bottom: -0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(135deg, #0078cf 0%, #48bb78 100%);
+    border-radius: 2px;
   }
 
   .form-section {
@@ -274,7 +289,12 @@
   }
 
   .form-group {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
     margin-bottom: 1rem;
+    transition: all 0.3s ease;
   }
 
   .info-message {
@@ -287,6 +307,18 @@
     font-size: 0.9rem;
   }
 
+  .form-group:focus-within {
+    border-color: #48bb78;
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.15);
+  }
+
+  .form-group label {
+    color: #4a5568;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
   label {
     display: block;
     margin-bottom: 0.5rem;
@@ -295,16 +327,19 @@
 
   input,
   textarea {
+    border: none;
+    padding: 0;
+    font-size: 1rem;
+    background: transparent;
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    resize: none;
   }
 
   input:focus,
   textarea:focus {
-    border-color: #38a169;
-    background: white;
+    outline: none;
+    box-shadow: none;
+    transform: none;
   }
 
   button {
@@ -328,8 +363,10 @@
   }
 
   .char-counter {
-    color: #718096;
-    font-size: 0.875rem;
+    text-align: right;
+    font-size: 0.8rem;
+    color: #a0aec0;
+    margin-top: 0.5rem;
   }
 
   .error-message {

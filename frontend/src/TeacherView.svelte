@@ -289,6 +289,26 @@
     min-height: 0;
   }
 
+    .questions-section h2 {
+    color: #0078cf;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+
+  .questions-section h2::after {
+    content: "";
+    position: absolute;
+    bottom: -0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(135deg, #0078cf 0%, #48bb78 100%);
+    border-radius: 2px;
+  }
+
   .session-info .sid {
     color: #0078cf;
     font-weight: 600;
@@ -375,25 +395,57 @@
     margin-bottom: 1rem;
   }
 
-  .questions-section {
-    width: 70%;
-    padding: 2rem;
-  }
-
   .questions-list {
-    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   .question-card {
+    margin-bottom: 1rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
     display: flex;
     justify-content: space-between;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.15s ease;
+  }
+
+  .question-card:hover {
+    border-color: #0078cf;
+    background: #f8fafc;
   }
 
   .question-content {
-    flex-grow: 1;
+    flex: 1;
+    min-width: 0;
   }
+
+  .question-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.question-author {
+  color: #294d9c;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.question-time {
+  color: #a0aec0;
+  font-size: 0.8rem;
+}
+
+.question-text {
+  color: #4a5568;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
 </style>
