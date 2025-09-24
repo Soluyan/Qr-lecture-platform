@@ -53,7 +53,6 @@
       // Загружаем настройки сессии
       await loadSessionSettings();
 
-      // Подключаем WebSocket
       connectWebSocket();
     } catch (error) {
       console.error("Error creating session:", error);
@@ -167,6 +166,23 @@
     }
   }
 
+  function formatQuestionTime(dateString) {
+    if (!dateString) return "Только что";
+
+    try {
+      const date = new Date(dateString);
+      return isNaN(date.getTime())
+        ? "Только что"
+        : date.toLocaleTimeString("ru-RU", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+    } catch (e) {
+      return "Только что";
+    }
+  }
+
   // Обновляем настройки при изменении чекбокса
   $: if (sessionId && allowAnonymous !== undefined) {
     updateSessionSettings();
@@ -231,7 +247,7 @@
                   >{question.author || "Anonymous"}</span
                 >
                 <span class="question-time"
-                  >{new Date(question.createdAt).toLocaleTimeString()}</span
+                  >{formatQuestionTime(question.created_at)}</span
                 >
               </div>
               <p class="question-text">{question.text}</p>

@@ -57,7 +57,7 @@ func AskQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		SessionID: sessionID,
 		Author:    req.Author,
 		Text:      req.Text,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Format(time.RFC3339),
 	}
 
 	// Добавляем вопрос в хранилище

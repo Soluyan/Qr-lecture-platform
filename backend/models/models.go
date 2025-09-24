@@ -24,9 +24,9 @@ type Session struct {
 }
 
 type Question struct {
-	ID        string    `json:"id"`
-	SessionID string    `json:"session_id"`
-	Author    string    `json:"author"`
-	Text      string    `json:"text"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        string `json:"id"`
+	SessionID string `json:"session_id"`
+	Author    string `json:"author"`
+	Text      string `json:"text"`
+	CreatedAt string `json:"created_at"`
 }
