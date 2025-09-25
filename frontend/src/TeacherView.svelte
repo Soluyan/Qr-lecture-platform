@@ -1,16 +1,29 @@
 <script>
   import { onMount } from "svelte";
 
+  // ID текущей сессии
   let sessionId = "";
+  // URL сгенерированного QR-кода в base64
   let qrCodeUrl = "";
+  // Массив полученных вопросов от студентов
   let questions = [];
+  // WebSocket соединение для реального времени
   let ws = null;
+  // Флаг загрузки при создании сессии
   let loading = false;
+  // Флаг загрузки при создании сессии (дублирует loading? можно объединить)
   let sessionLoading = false;
+  // Статус подключения WebSocket: "disconnected", "connecting", "connected", "error"
   let connectionStatus = "disconnected";
+  // Разрешены ли анонимные вопросы в текущей сессии
   let allowAnonymous = true;
+  // Флаг загрузки при обновлении настроек
   let settingsLoading = false;
 
+  /**
+   * Функция, выполняемая после монтирования компонента
+   * Выполняет очистку при размонтировании компонента
+   */
   onMount(() => {
     console.log("TeacherView mounted");
     return () => {
@@ -20,6 +33,10 @@
     };
   });
 
+  /**
+   * Создает новую сессию для лекции
+   * Генерирует QR-код, настраивает WebSocket соединение
+   */
   async function createSession() {
     sessionLoading = true;
     qrCodeUrl = "";
@@ -27,12 +44,14 @@
     sessionId = "";
     connectionStatus = "disconnected";
 
+    // Закрываем предыдущее WebSocket
     if (ws) {
       ws.close();
       ws = null;
     }
 
     try {
+      // Отправляем запрос на создание сессии
       const response = await fetch("http://localhost:8080/create-session");
 
       if (!response.ok) {
@@ -53,6 +72,7 @@
       // Загружаем настройки сессии
       await loadSessionSettings();
 
+      // Устанавливаем WebSocket соединение
       connectWebSocket();
     } catch (error) {
       console.error("Error creating session:", error);
@@ -62,6 +82,10 @@
     }
   }
 
+  /**
+   * Загружает настройки текущей сессии с сервера
+   * Включая разрешение анонимных вопросов
+   */
   async function loadSessionSettings() {
     if (!sessionId) return;
 
@@ -78,6 +102,10 @@
     }
   }
 
+  /**
+   * Обновляет настройки сессии на сервере
+   * Вызывается при изменении разрешения анонимных вопросов
+   */
   async function updateSessionSettings() {
     if (!sessionId) return;
 
@@ -109,6 +137,10 @@
     }
   }
 
+  /**
+   * Устанавливает WebSocket соединение для получения вопросов в реальном времени
+   * Обрабатывает все события соединения: открытие, сообщения, ошибки, закрытие
+   */
   function connectWebSocket() {
     console.log("connectWebSocket called with sessionId:", sessionId);
 
@@ -125,6 +157,7 @@
     connectionStatus = "connecting"; // Устанавливаем статус подключения
 
     try {
+      // Создаем новое WebSocket соединение с передачей ID
       ws = new WebSocket(`ws://localhost:8080/ws?session=${sessionId}`);
 
       ws.onopen = () => {
@@ -134,6 +167,7 @@
 
       ws.onmessage = (event) => {
         try {
+          // Парсинг
           const data = JSON.parse(event.data);
           questions = Array.isArray(data) ? data : [];
           console.log("Received questions:", questions.length);
@@ -143,11 +177,13 @@
         }
       };
 
+      // Обработчик ошибок WebSocket
       ws.onerror = (error) => {
         console.error("WebSocket error:", error);
         connectionStatus = "error";
       };
 
+      // Обработчик закрытия соединения
       ws.onclose = (event) => {
         console.log("WebSocket disconnected:", event.code, event.reason);
         connectionStatus = "disconnected";
@@ -160,12 +196,21 @@
     }
   }
 
+  /**
+   * Отправляет запрос на удаление вопроса через WebSocket
+   * @param {string} id - ID вопроса для удаления
+   */
   function deleteQuestion(id) {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ action: "delete", question_id: id }));
     }
   }
 
+  /**
+   * Форматирует время вопроса в читаемый вид
+   * @param {string} dateString - строка с датой/временем
+   * @returns {string} отформатированное время или "Только что"
+   */
   function formatQuestionTime(dateString) {
     if (!dateString) return "Только что";
 
@@ -183,7 +228,10 @@
     }
   }
 
-  // Обновляем настройки при изменении чекбокса
+  /**
+   * Реактивное выражение: автоматически обновляет настройки при изменении
+   * Срабатывает при изменении sessionId или allowAnonymous
+   */
   $: if (sessionId && allowAnonymous !== undefined) {
     updateSessionSettings();
   }

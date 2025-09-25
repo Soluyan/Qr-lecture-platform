@@ -25,7 +25,11 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-// GenerateSessionHandler создает новую сессию и возвращает JSON с sessionId и QR-кодом
+/**
+ * GenerateSessionHandler создает новую сессию лекции
+ * Генерирует уникальный ID сессии, QR-код и настройки по умолчанию
+ * Возвращает JSON с sessionId и QR-кодом в base64
+ */
 func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	// Добавляем CORS заголовки
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -41,7 +45,7 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	sessionID := uuid.New().String()
 
 	// Создаем сессию с таймером жизни 80 минут
-	expiresAt := time.Now().Add(80 * time.Minute)
+	expiresAt := time.Now().Add(90 * time.Minute)
 	newSession := models.Session{
 		ID:        sessionID,
 		ExpiresAt: expiresAt,
@@ -85,6 +89,10 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+/**
+ * UpdateSessionSettingsHandler обновляет настройки существующей сессии
+ * Позволяет изменять разрешение анонимных вопросов
+ */
 func UpdateSessionSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -95,17 +103,20 @@ func UpdateSessionSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Проверяем метод запроса
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
+	// Извлекаем ID сессии из query
 	sessionID := r.URL.Query().Get("session")
 	if sessionID == "" {
 		http.Error(w, "Session ID is required", http.StatusBadRequest)
 		return
 	}
 
+	// Парсим JSON
 	var settings struct {
 		AllowAnonymous bool `json:"allowAnonymous"`
 	}
@@ -123,12 +134,17 @@ func UpdateSessionSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	models.SessionsLock.Unlock()
 
+	// Возвращаем успешный ответ
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{
 		"success": true,
 	})
 }
 
+/**
+ * GetSessionSettingsHandler возвращает текущие настройки сессии
+ * Используется студенческой частью для проверки разрешения анонимных вопросов
+ */
 func GetSessionSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
@@ -139,12 +155,14 @@ func GetSessionSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Извлекаем ID сессии из query
 	sessionID := r.URL.Query().Get("session")
 	if sessionID == "" {
 		http.Error(w, "Session ID is required", http.StatusBadRequest)
 		return
 	}
 
+	// Читаем данные сессии
 	models.SessionsLock.RLock()
 	session, exists := models.Sessions[sessionID]
 	models.SessionsLock.RUnlock()
@@ -154,16 +172,24 @@ func GetSessionSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Возвращаем настройки сессии в JSON формате
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(session.Settings)
 }
 
-// CleanupSessions регулярно очищает просроченные сессии
+/**
+ * CleanupSessions периодически очищает просроченные сессии и вопросы
+ * Запускается в отдельной goroutine и работает каждые 5 минут
+ */
 func CleanupSessions() {
 	for {
 		time.Sleep(5 * time.Minute)
+
+		// Блокируем доступ к данным для безопасной очистки
 		models.SessionsLock.Lock()
 		models.QuestionsMutex.Lock()
+
+		// Проходим по всем сессиям и удаляем просроченные
 		for id, session := range models.Sessions {
 			if time.Now().After(session.ExpiresAt) {
 				delete(models.Sessions, id)
@@ -175,8 +201,13 @@ func CleanupSessions() {
 	}
 }
 
+/**
+ * enableCORS middleware добавляет CORS заголовки к HTTP обработчикам
+ * Позволяет фронтенду на другом порту взаимодействовать с бэкендом
+ */
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Устанавливаем CORS заголовки
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -198,8 +229,13 @@ func main() {
 
 	go CleanupSessions()
 
+	// Статические файлы фронтенда
 	http.Handle("/", http.FileServer(http.Dir("../frontend/public")))
+
+	// WebSocket endpoint для реального времени
 	http.HandleFunc("/ws", handlers.WsHandler)
+
+	// REST API endpoints с CORS поддержкой
 	http.HandleFunc("/create-session", enableCORS(GenerateSessionHandler))
 	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
 	http.HandleFunc("/session/settings", enableCORS(UpdateSessionSettingsHandler))
@@ -207,19 +243,26 @@ func main() {
 
 	log.Println("Server starting on :8080...")
 
+	// Запускаем сервер в отдельной горутине
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}
 	}()
 
+	// Создаем канал для получения сигналов ОС
 	quit := make(chan os.Signal, 1)
+
+	// Регистрируем обработчики для сигналов завершения
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// Ожидаем завершение
 	<-quit
 
+	// Создаем контекст с таймаутом для graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Останавливаем сервер с таймаутом
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)
 	}

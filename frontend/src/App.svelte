@@ -1,14 +1,15 @@
 <script>
-  import TeacherView from './TeacherView.svelte';
-  import StudentView from './StudentView.svelte';
+  import TeacherView from "./TeacherView.svelte";
+  import StudentView from "./StudentView.svelte";
 
   let isTeacherView = true;
-  
+
   // Проверяем, есть ли параметры в URL
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const url = new URL(window.location.href);
     // Если путь содержит "student" или есть параметр session - это студент
-    isTeacherView = !url.pathname.includes('student') && !url.searchParams.has('session');
+    isTeacherView =
+      !url.pathname.includes("student") && !url.searchParams.has("session");
   }
 </script>
 
@@ -19,10 +20,3 @@
     <StudentView />
   {/if}
 </main>
-
-<!-- <style>
-  main {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-  }
-</style> -->

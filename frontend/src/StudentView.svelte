@@ -1,18 +1,33 @@
 <script>
   import { onMount } from "svelte";
 
+  // Имя пользователя, задающего вопрос
   let name = "";
+  // Текст вопроса
   let question = "";
+  // Флаг анонимного вопроса
   let isAnonymous = false;
+  // ID сессии из URL параметра
   let sessionId = "";
+  // Флаг успешной отправки вопроса
   let submitted = false;
+  // Флаг загрузки при отправке вопроса
   let loading = false;
+  // Сообщение об ошибке
   let error = "";
+  // Базовый URL API сервера
   let apiBaseUrl = "http://localhost:8080";
+  // Настройки текущей сессии (разрешение анонимных вопросов и т.д.)
   let sessionSettings = null;
+  // Флаг загрузки настроек сессии
   let settingsLoading = false;
 
+  /**
+   * Функция, выполняемая после монтирования компонента в DOM
+   * Извлекает ID сессии из URL параметров и загружает настройки
+   */
   onMount(() => {
+    // Парсим параметры URL для получения ID
     const urlParams = new URLSearchParams(window.location.search);
     sessionId = urlParams.get("session") || "";
 
@@ -25,6 +40,10 @@
     }
   });
 
+  /**
+   * Загружает настройки сессии с сервера
+   * Проверяет разрешены ли анонимные вопросы и другие параметры
+   */
   async function loadSessionSettings() {
     if (!sessionId) return;
 
@@ -44,6 +63,10 @@
     }
   }
 
+  /**
+   * Основная функция отправки вопроса на сервер
+   * Выполняет валидацию, проверяет настройки сессии и отправляет данные
+   */
   async function submitQuestion() {
     if (!sessionId) {
       error = "Требуется идентификатор сеанса";
@@ -77,6 +100,7 @@
     const author = isAnonymous ? "Аноним" : name.trim() || "Аноним";
 
     try {
+      // Отправляем POST запрос на сервер
       const response = await fetch(`${apiBaseUrl}/ask?session=${sessionId}`, {
         method: "POST",
         headers: {
@@ -114,6 +138,7 @@
         }
       }
     } catch (e) {
+      // Обрабатываем сетевые ошибки
       console.error("Network error:", e);
       error = "Ошибка сети. Проверьте подключение и повторите попытку.";
     } finally {
@@ -121,15 +146,23 @@
     }
   }
 
-  // Функция для отправки другого вопроса
+  /**
+   * Сбрасывает состояние формы для отправки нового вопроса
+   * Вызывается после успешной отправки предыдущего вопроса
+   */
   function submitAnother() {
     submitted = false;
     question = "";
     error = "";
   }
 
-  // Автоматически фокусироваться на поле вопроса при загрузке
+  // Ссылка на textarea элемента для управления
   let questionTextarea;
+
+  /**
+   * Устанавливает фокус на поле ввода вопроса при загрузке компонента
+   * Для удобства пользователя
+   */
   onMount(() => {
     if (questionTextarea) {
       questionTextarea.focus();
