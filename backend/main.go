@@ -60,6 +60,8 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	studentURL := fmt.Sprintf("%s/student?session=%s", baseURL, sessionID)
 
+	log.Printf("Generated student URL: %s", studentURL)
+
 	// Создаем QR-код
 	qr, err := qrcode.New(studentURL, qrcode.Medium)
 	if err != nil {
