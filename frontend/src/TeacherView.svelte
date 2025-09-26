@@ -69,7 +69,11 @@
       sessionId = data.sessionId;
       qrCodeUrl = `data:image/png;base64,${data.qrCode}`;
 
-      console.log("Session created successfully:", sessionId);
+      console.log("Generated session ID:", sessionId);
+      console.log(
+        "QR code URL should point to:",
+        `${window.location.origin}/student?session=${sessionId}`
+      );
 
       // Загружаем настройки сессии
       await loadSessionSettings();
@@ -160,11 +164,11 @@
 
     try {
       // Создаем новое WebSocket соединение с передачей ID
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = import.meta.env.VITE_API_URL 
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = import.meta.env.VITE_API_URL
         ? `${protocol}//${window.location.host}/ws?session=${sessionId}`
         : `ws://localhost:8080/ws?session=${sessionId}`;
-      
+
       ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {

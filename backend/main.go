@@ -1,10 +1,4 @@
-// GenerateSessionHandler creates a new lecture session and returns QR code
-// @Summary Create new session
-// @Description Generates new lecture session with 80min lifetime and returns QR code
-// @Produce png
-// @Success 200 {file} binary "QR code image"
-// @Router /create-session [get]
-
+// backend/main.go
 package main
 
 import (
