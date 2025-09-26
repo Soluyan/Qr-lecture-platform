@@ -19,6 +19,8 @@
   let allowAnonymous = true;
   // Флаг загрузки при обновлении настроек
   let settingsLoading = false;
+  // Базовый URL для API
+  let apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
   /**
    * Функция, выполняемая после монтирования компонента
@@ -52,7 +54,7 @@
 
     try {
       // Отправляем запрос на создание сессии
-      const response = await fetch("http://localhost:8080/create-session");
+      const response = await fetch(`${apiBaseUrl}/create-session`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -91,7 +93,7 @@
 
     try {
       const response = await fetch(
-        `http://localhost:8080/session/settings/get?session=${sessionId}`
+        `${apiBaseUrl}/session/settings/get?session=${sessionId}`
       );
       if (response.ok) {
         const settings = await response.json();
@@ -112,7 +114,7 @@
     settingsLoading = true;
     try {
       const response = await fetch(
-        `http://localhost:8080/session/settings?session=${sessionId}`,
+        `${apiBaseUrl}/session/settings?session=${sessionId}`,
         {
           method: "POST",
           headers: {
@@ -158,7 +160,12 @@
 
     try {
       // Создаем новое WebSocket соединение с передачей ID
-      ws = new WebSocket(`ws://localhost:8080/ws?session=${sessionId}`);
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = import.meta.env.VITE_API_URL 
+        ? `${protocol}//${window.location.host}/ws?session=${sessionId}`
+        : `ws://localhost:8080/ws?session=${sessionId}`;
+      
+      ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log("WebSocket connected for session:", sessionId);

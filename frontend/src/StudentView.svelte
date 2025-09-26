@@ -16,7 +16,7 @@
   // Сообщение об ошибке
   let error = "";
   // Базовый URL API сервера
-  let apiBaseUrl = "http://localhost:8080";
+  let apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
   // Настройки текущей сессии (разрешение анонимных вопросов и т.д.)
   let sessionSettings = null;
   // Флаг загрузки настроек сессии

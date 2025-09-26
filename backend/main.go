@@ -59,8 +59,12 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	models.Sessions[sessionID] = newSession
 	models.SessionsLock.Unlock()
 
-	// Генерируем URL для студентов (используем localhost для разработки)
-	studentURL := fmt.Sprintf("http://localhost:5173/ask?session=%s", sessionID)
+	// Генерируем URL для студентов
+	baseURL := os.Getenv("RAILWAY_STATIC_URL")
+	if baseURL == "" {
+		baseURL = "https://sol-platrofm.railway.app"
+	}
+	studentURL := fmt.Sprintf("%s/student?session=%s", baseURL, sessionID)
 
 	// Создаем QR-код
 	qr, err := qrcode.New(studentURL, qrcode.Medium)
@@ -207,8 +211,14 @@ func CleanupSessions() {
  */
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Устанавливаем CORS заголовки
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		// Разрешаем запросы с любого origin в продакшене
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
@@ -223,14 +233,15 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	// Создаем HTTP сервер с настройками
 	server := &http.Server{
-		Addr: ":8080",
+		Addr: ":" + os.Getenv("PORT"),
 	}
 
 	go CleanupSessions()
 
 	// Статические файлы фронтенда
-	http.Handle("/", http.FileServer(http.Dir("../frontend/public")))
+	http.Handle("/", http.FileServer(http.Dir("./public")))
 
 	// WebSocket endpoint для реального времени
 	http.HandleFunc("/ws", handlers.WsHandler)
@@ -241,7 +252,7 @@ func main() {
 	http.HandleFunc("/session/settings", enableCORS(UpdateSessionSettingsHandler))
 	http.HandleFunc("/session/settings/get", enableCORS(GetSessionSettingsHandler))
 
-	log.Println("Server starting on :8080...")
+	log.Printf("Server starting on port %s...", os.Getenv("PORT"))
 
 	// Запускаем сервер в отдельной горутине
 	go func() {
