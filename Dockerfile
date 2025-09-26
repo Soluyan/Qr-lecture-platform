@@ -7,7 +7,7 @@ COPY frontend/ .
 RUN npm run build
 
 # Сборка бэкенда (Go)
-FROM golang:1.22 as backend
+FROM golang:1.24.2 as backend
 WORKDIR /app/backend
 COPY backend/go.* ./
 RUN go mod download
