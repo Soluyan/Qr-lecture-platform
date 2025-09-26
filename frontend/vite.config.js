@@ -11,6 +11,6 @@ export default defineConfig({
     outDir: 'dist'
   },
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || '')
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://qr-lecture-platform-production.up.railway.app')
   }
 });

@@ -62,7 +62,7 @@ func GenerateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	// Генерируем URL для студентов
 	baseURL := os.Getenv("RAILWAY_STATIC_URL")
 	if baseURL == "" {
-		baseURL = "https://sol-platrofm.railway.app"
+		baseURL = "https://qr-lecture-platform-production.up.railway.app"
 	}
 	studentURL := fmt.Sprintf("%s/student?session=%s", baseURL, sessionID)
 
