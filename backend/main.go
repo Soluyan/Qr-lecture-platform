@@ -233,6 +233,10 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	// Создаем HTTP сервер с настройками
 	server := &http.Server{
 		Addr: ":" + os.Getenv("PORT"),
@@ -251,6 +255,10 @@ func main() {
 	http.HandleFunc("/ask", enableCORS(handlers.AskQuestionHandler))
 	http.HandleFunc("/session/settings", enableCORS(UpdateSessionSettingsHandler))
 	http.HandleFunc("/session/settings/get", enableCORS(GetSessionSettingsHandler))
+
+	http.HandleFunc("/student", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./public/index.html")
+	})
 
 	log.Printf("Server starting on port %s...", os.Getenv("PORT"))
 
